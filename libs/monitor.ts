@@ -1,7 +1,27 @@
-const qs = require('qs')
-const Errors = require('./errors')
+import { CronitorApi } from "./statuz"
+import qs from 'qs'
+
+interface MonitorParams {
+    host?: string
+    series?: string
+    message?: string
+    state?: string
+    env?: string
+    metrics?: string
+}
 
 class Monitor {
+    public _api: CronitorApi
+    private key: string
+    static _api: CronitorApi
+
+    constructor(key: string) {
+        if (!key) throw new Error("A key is required.")
+
+        this.key = key
+        this.data = null
+      
+    }
 
     static get State() {
         return {
@@ -12,34 +32,28 @@ class Monitor {
         }
     }
 
-    static async put(data, rollback=false) {
-        if (Array.isArray(data))
-            data = data
-        else if (typeof data == 'object')
-            data = [data]
-        else
-            throw new Errors.MonitorNotCreated("Invalid monitor data.")
+    // static async put(data, rollback=false) {
+    //     if (Array.isArray(data))
+    //         data = data
+    //     else if (typeof data == 'object')
+    //         data = [data]
+    //     else
+    //         throw new Errors.MonitorNotCreated("Invalid monitor data.")
 
-        try {
-            const resp = await this._api.axios.put(this._api.monitorUrl(), {monitors: data, rollback})
-            let monitors = resp.data.monitors.map((_m) => {
-                let m = new Monitor(_m.key)
-                m.data = _m
-                return m
-            })
-            return monitors.length > 1 ? monitors : monitors[0]
-        } catch(e) {
-            throw new Errors.MonitorNotCreated(e.message)
-        }
-    }
+    //     try {
+    //         const resp = await this._api.axios.put(this._api.monitorUrl(), {monitors: data, rollback})
+    //         let monitors = resp.data.monitors.map((_m) => {
+    //             let m = new Monitor(_m.key, this._api)
+    //             m.data = _m
+    //             return m
+    //         })
+    //         return monitors.length > 1 ? monitors : monitors[0]
+    //     } catch(e) {
+    //         throw new Errors.MonitorNotCreated(e.message)
+    //     }
+    // }
 
-    constructor(key) {
-        if (!key) throw new Errors.InvalidMonitor("A key is required.")
 
-        this.key = key
-        this.data = null
-        this._api = this.constructor._api
-    }
 
     async data() {
         // return this._api.axios
@@ -82,7 +96,7 @@ class Monitor {
     }
 
     async ping(params={}) {
-        console.log('PING!!!!', qs.stringify(this._cleanParams(params), { arrayFormat: 'repeat', encode: false}))
+        // console.log('PING!!!!', this._cleanParams(params))
         try {
             await this._api.axios.get(
                 this._api.pingUrl(this.key), {
@@ -98,7 +112,9 @@ class Monitor {
         }
     }
 
-    _cleanParams(params={}) {
+    
+
+    _cleanParams(params: MonitorParams = {}) {
         
         let metric = null
         let host = params.host ||  process.env.HOSTNAME || null
@@ -126,7 +142,7 @@ class Monitor {
             series: series,
             host: host,
             stamp: Date.now() / 1000,
-            env: params.env || this._api.env
+            env: params.env
         }
 
         Object.keys(allowedParams).forEach((key) => (allowedParams[key] == null) && delete allowedParams[key])
@@ -134,6 +150,4 @@ class Monitor {
     }
 }
 
-
-module.exports = Monitor
-module.exports.default = Monitor
+export default Monitor

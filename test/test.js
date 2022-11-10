@@ -13,7 +13,7 @@ const Monitor = require('../lib/monitor')
 sinonStubPromise(sinon)
 chai.use(sinonChai)
 
-const cronitor = require('../lib/cronitor')('apiKey123')
+const cronitor = require('../libs/cronitor')('apiKey123')
 
 describe('Config Parser', function() {
     context('readConfig', function() {

@@ -1,6 +1,6 @@
 const axios = require('axios')
 const Parser = require('rss-parser')
-const cronitor = require('../lib/cronitor')('fakeApiKey')
+const cronitor = require('../libs/cronitor')('fakeApiKey')
 let parser = new Parser()
 
 const event = new cronitor.Event('monitor-key')
